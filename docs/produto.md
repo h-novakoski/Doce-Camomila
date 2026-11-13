@@ -26,6 +26,6 @@ Motorista pega a saca → anota na folha "Tadeu · saca 365 · NX676 · 41999…
 ## Pendências do dono do projeto
 - Contas no nome da agência: Supabase ok (projeto `doce-camomila` criado e ligado, 2026-11-13); Cloudflare: confirmar aceite do convite.
 - Dona da agência preencher no e-mail: telefone e e-mail de recuperação dela + verificação em duas etapas.
-- Endereço do site (docecamomila.pages.dev grátis ou domínio próprio).
+- Endereço do site: no ar em https://docecamomila.pages.dev (motorista) e /agencia (adms), desde 2026-11-13. Domínio próprio é opcional.
 - Cartaz A4 com QR para a bancada (oferecido).
 - Antes de ir ao ar: trocar a senha ou apagar a conta de teste `higor` (senha fraca, vê dados reais).

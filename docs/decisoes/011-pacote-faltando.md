@@ -8,3 +8,4 @@ Data: 2026-11-13 | Status: ativa
 - Cor: vermelho (`--warn`) só para falta; amarelo continua sendo ação e verde, WhatsApp.
 **Segurança:** só quem registrou pode avisar falta naquela saca. No Supabase: a RPC `registrar` devolve um token secreto do registro, que fica no celular do motorista; a RPC `avisar_falta(token, quantidade)` só aceita com ele. A adm marca resolvido via policy de UPDATE restrita a `admins`, só nas colunas de falta.
 **Consequência:** três campos no registro (`faltando`, `achados`, `resolvido`). Fora: status além de "faltando/resolvido", notificação push, foto/código do pacote.
+**Um botão de grupo por vez (2026-11-13):** na tela Registrado, enquanto o "Avisado!" mostra "Mandar no grupo", o "Abrir grupo no WhatsApp" de baixo fica escondido; volta ao fechar o aviso.

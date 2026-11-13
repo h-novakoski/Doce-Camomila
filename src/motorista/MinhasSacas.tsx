@@ -31,11 +31,13 @@ function useMinhas(versao: number) {
  * O aviso de falta de UMA saca (decisão 011): botão → quantidade no teclado numérico → Avisar
  * → "Avisado!" + mandar no grupo. `cheio`: botão largo (tela Registrado); senão, compacto (lista).
  */
-function AvisoFalta({ r, nome, cheio, onMudou }: {
+function AvisoFalta({ r, nome, cheio, onMudou, onGrupo }: {
   r: Registro
   nome: string
   cheio?: boolean
   onMudou: (faltando: number) => void
+  /** Avisa a tela quando o "Mandar no grupo" está à mostra (para não ter 2 botões de grupo). */
+  onGrupo?: (id: string, mostrando: boolean) => void
 }) {
   const [aberto, setAberto] = useState(false)
   const [qtd, setQtd] = useState('')
@@ -43,10 +45,16 @@ function AvisoFalta({ r, nome, cheio, onMudou }: {
   const [avisado, setAvisado] = useState<number | null>(null)
   const refQtd = useRef<HTMLInputElement>(null)
   const corrigindo = r.faltando > 0
+  const mostrandoGrupo = aberto && avisado !== null && avisado > 0
 
   useEffect(() => {
     if (aberto && avisado === null) { refQtd.current?.focus(); refQtd.current?.select() }
   }, [aberto, avisado])
+
+  useEffect(() => {
+    onGrupo?.(r.id, mostrandoGrupo)
+    return () => onGrupo?.(r.id, false)
+  }, [mostrandoGrupo, r.id, onGrupo])
 
   function abrir() {
     setQtd(r.faltando ? String(r.faltando) : '')
@@ -129,13 +137,18 @@ function AvisoFalta({ r, nome, cheio, onMudou }: {
 }
 
 /** Tela Registrado: o aviso da saca que acabou de registrar, logo abaixo do ticket. */
-export function FaltaDaSaca({ id, nome, versao }: { id: string; nome: string; versao: number }) {
+export function FaltaDaSaca({ id, nome, versao, onGrupo }: {
+  id: string; nome: string; versao: number; onGrupo?: (id: string, mostrando: boolean) => void
+}) {
   const [sacas, setSacas] = useMinhas(versao)
   const r = sacas.find((s) => s.id === id)
   if (!r) return null
   return (
     <div className="falta-saca">
-      <AvisoFalta r={r} nome={nome} cheio onMudou={(n) => setSacas((l) => l.map((s) => (s.id === id ? { ...s, faltando: n } : s)))} />
+      <AvisoFalta
+        r={r} nome={nome} cheio onGrupo={onGrupo}
+        onMudou={(n) => setSacas((l) => l.map((s) => (s.id === id ? { ...s, faltando: n } : s)))}
+      />
     </div>
   )
 }
@@ -145,11 +158,12 @@ export function FaltaDaSaca({ id, nome, versao }: { id: string; nome: string; ve
  * Ele pode avisar a qualquer hora: na bancada, depois de contar, ou no meio da rota.
  * `exceto`: esconde uma saca (a que já aparece em destaque na tela Registrado).
  */
-export function MinhasSacas({ nome, versao, exceto, titulo = 'Suas sacas de hoje' }: {
+export function MinhasSacas({ nome, versao, exceto, titulo = 'Suas sacas de hoje', onGrupo }: {
   nome: string
   versao: number
   exceto?: string
   titulo?: string
+  onGrupo?: (id: string, mostrando: boolean) => void
 }) {
   const [todas, setSacas] = useMinhas(versao)
   const sacas = todas.filter((s) => s.id !== exceto)
@@ -166,7 +180,7 @@ export function MinhasSacas({ nome, versao, exceto, titulo = 'Suas sacas de hoje
               <small>{hora(r)}</small>
             </div>
             <AvisoFalta
-              r={r} nome={nome}
+              r={r} nome={nome} onGrupo={onGrupo}
               onMudou={(n) => setSacas((l) => l.map((s) => (s.id === r.id ? { ...s, faltando: n } : s)))}
             />
           </div>

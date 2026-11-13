@@ -5,7 +5,7 @@ Substitui a folha de papel da bancada da agência Doce Camomila: o motorista reg
 ## Stack (ver docs/decisoes/008)
 - Front: Vite + React + TypeScript + vite-plugin-pwa (site comum; instalar é opcional)
 - Banco/auth: Supabase, projeto `doce-camomila` (ref `mopkiuvyeswfxqouythe`, São Paulo) na organização da agência
-- Deploy: Cloudflare Pages, grátis, a cada push no GitHub
+- Deploy: Cloudflare Pages (projeto `docecamomila`, https://docecamomila.pages.dev), automático a cada push no `main`. Build `npm run build`, saída `dist`, preset None; as duas variáveis VITE_ ficam em Settings → Variables (sem elas o site abre em branco)
 
 ## Configuração
 - `.env.local` (fora do git) com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`; modelo em `.env.example`. Na Cloudflare, as mesmas variáveis no painel.
