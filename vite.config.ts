@@ -8,17 +8,23 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['flor.svg'],
+      includeAssets: ['flor.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Doce Camomila — Sacas do dia',
         short_name: 'Camomila',
         description: 'Registro das sacas do dia na Doce Camomila.',
         lang: 'pt-BR',
+        id: '/',
         start_url: '/',
+        scope: '/',
         display: 'standalone',
         background_color: '#F5F4EE',
         theme_color: '#F5F4EE',
+        // PNG é obrigatório para o Android instalar (só SVG = a instalação falha sem avisar)
         icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           { src: 'flor.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
       },

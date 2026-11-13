@@ -31,6 +31,8 @@ Substitui a folha de papel da bancada da agência Doce Camomila: o motorista reg
 - `src/lib/local.ts`: o que o motorista guarda no navegador (nome, telefone, dica do atalho, **chaves secretas** das sacas dele, por 3 dias)
 - `src/lib/config.ts`: link do grupo do WhatsApp da agência
 - `src/styles.css`: CSS copiado do protótipo. Mudou o visual? Mude nos dois.
+- `public/`: ícones do app. Os PNG (192, 512, maskable 512, apple-touch 180) são obrigatórios para instalar no Android/iPhone; só SVG faz a instalação falhar sem aviso.
+- `src/App.tsx`: o app instalado sempre abre em `/`; se a última tela usada naquele celular foi a agência, vai direto para `/agencia` (chave `camomila-tela`).
 - **O protótipo ainda não tem o aviso de pacote faltando (decisão 011).** Para essa parte, a referência é o app.
 
 ## Testar
