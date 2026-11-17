@@ -6,7 +6,7 @@ export function linkWaMe(tel: string | null, texto: string) {
   return `https://wa.me/${tel ? '55' + tel : ''}?text=${encodeURIComponent(texto)}`
 }
 
-const ehCelular = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+export const ehCelular =() => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
 /** Use no onClick de um <a href={linkWaMe(...)}>. */
 export function abrirWhatsApp(e: { preventDefault: () => void }, tel: string | null, texto: string) {

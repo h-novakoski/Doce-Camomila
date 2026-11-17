@@ -7,7 +7,7 @@ Motorista pega a saca → anota na folha "Tadeu · saca 365 · NX676 · 41999…
 1. **1ª vez:** campos `Nome` e `Seu WhatsApp (com DDD)`. O +55 é fixo (todos são do Brasil); o DDD o motorista digita, "(41) 99999-9999" é só exemplo no campo (há motoristas de outros estados). Antes de salvar: "Esse é seu WhatsApp? (41) 99999-9999 [Corrigir] [Sim]". Nome e telefone ficam salvos no navegador (localStorage).
 2. **Registrar:** "Oi, {nome}! Qual a saca de agora?". Dois campos lado a lado, sem rótulo em cima, com o nome dentro: `Saca 000` e `NX 000`. **Os dois obrigatórios. Só números.** Botão "Registrar saca".
 3. **Registrado (tudo centralizado):** flor com check, "Registrado, {nome}!", saca e NX grandes para conferir, botão "Registrar outra saca", dica de atalho (só após o 1º registro) e "Outro assunto? Fale com a agência no grupo." com o botão verde "Abrir grupo no WhatsApp".
-- **Pacote faltando (decisão 011):** em "Registrado", botão "Faltou pacote?" logo abaixo da saca e "Outras sacas de hoje" embaixo; na tela de registrar, "Suas sacas de hoje" com "Faltou pacote" em cada uma (serve no meio da rota). Quantidade no teclado numérico → Avisar; botão "Atualizar" muda a quantidade até a agência resolver. Depois: botão "Mandar também no grupo" com "Aqui é o {nome}. Faltam N pacotes na saca X / NX Y." pronto.
+- **Pacote faltando (decisão 011):** em "Registrado", botão "Faltou pacote?" logo abaixo da saca e "Outras sacas de hoje" embaixo; na tela de registrar, "Suas sacas de hoje" com "Faltou pacote" em cada uma (serve no meio da rota). Quantidade no teclado numérico → Avisar; botão "Atualizar" muda a quantidade até a agência resolver. Depois: botão "Mandar para responsável" (no grupo só as adms escrevem; vai para a última adm que abriu a lista no dia, decisão 013) com "Aqui é o {nome}. Faltam N pacotes na saca X / NX Y." pronto.
 - Privacidade no cadastro: "Seu número é só para a agência te avisar de pacote. Tudo some depois de 3 dias."
 
 ## Agência (link separado, com login)
@@ -17,7 +17,8 @@ Motorista pega a saca → anota na folha "Tadeu · saca 365 · NX676 · 41999…
 - Busca vazia: mensagem + botão "Perguntar no grupo".
 - Ícone WhatsApp abre a conversa com: "Oi, {motorista}! É a {adm}, da Doce Camomila. Achamos um pacote da saca {saca} / NX {nx}. Está aqui, pode passar para buscar."
 - Nos dias anteriores (rota já fechada) a mensagem é neutra: "Oi, {motorista}! É a {adm}, da Doce Camomila. É sobre a saca {saca} / NX {nx} do dia {dd/mm}."
-- Pacote faltando (decisão 011): selo vermelho "Faltam N" embaixo do nome; tocar abre "Quantos estão aqui?" (3 de 5) → "Avisar {motorista}" no WhatsApp. Achou todos = resolvido; parte = "3 de 5 aqui". Aviso no topo "⚠ Falta pacote em N sacas" filtra as pendentes; bolinha vermelha no dia que tem.
+- Pacote faltando (decisão 011): selo vermelho "Faltam N" embaixo do nome; tocar abre "Quantos estão aqui?" (3 de 5) → "Avisar {motorista}" no WhatsApp. Achou todos = resolvido; parte = "3 de 5 aqui". Aviso "⚠ Falta pacote em N sacas" embaixo dos dias conta e filtra as pendentes do dia escolhido; bolinha vermelha no dia que tem. Botão "Mandar faltantes no grupo": texto pronto só com NX e quantidade de cada falta pendente do dia.
+- Registro do dia (decisão 012): botão "Planilha do dia" em cima da lista gera um .xlsx formatado (Data, Hora, Motorista, Saca, NX, Faltando, Achados; sem telefone) para compartilhar no WhatsApp ou baixar.
 - No celular, preferir `whatsapp://send?phone=55…&text=…` com fallback `https://wa.me/55…?text=…`.
 
 ## Fora do escopo (decidido pelo dono do projeto — não adicionar)

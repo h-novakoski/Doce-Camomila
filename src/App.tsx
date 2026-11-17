@@ -29,7 +29,8 @@ export function App() {
           <header className="bar">
             <Flor />
             <div className="brand"><b>Doce Camomila</b></div>
-            <div className="date">{hoje}</div>
+            {/* Só a agência vê a data: o motorista não usa (pedido do dono, 2026-11-16). */}
+            {ehAgencia && <div className="date">{hoje}</div>}
           </header>
           {ehAgencia ? <Agencia /> : <Motorista />}
         </div>

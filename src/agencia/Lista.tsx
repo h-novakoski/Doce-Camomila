@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { IconeWhatsApp } from '../components/Flor'
 import { LINK_GRUPO_WHATSAPP } from '../lib/config'
-import { aoMudar, DIAS_ANTERIORES, inicioDoDia, listarRegistros, marcarResolvido, registrarAchados, type Registro } from '../lib/registro'
+import { aoMudar, DIAS_ANTERIORES, inicioDoDia, listarRegistros, marcarPresenca, marcarResolvido, registrarAchados, type Registro } from '../lib/registro'
+import { compartilharPlanilha } from '../lib/planilha'
 import { abrirConversa, abrirWhatsApp, linkWaMe } from '../lib/whatsapp'
 
 const primeiroNome = (nome: string) => nome.split(' ')[0]
@@ -15,13 +16,31 @@ function diasDaLista() {
     const semana = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
     const nome = semana[0].toUpperCase() + semana.slice(1)
     const data = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-    return { atras, nome, data, contem: (r: Registro) => r.criadoEm >= inicio && r.criadoEm < fim }
+    return { atras, inicio, nome, data, contem: (r: Registro) => r.criadoEm >= inicio && r.criadoEm < fim }
   })
 }
 
 type Dia = ReturnType<typeof diasDaLista>[number] & { linhas: Registro[]; pendentes: number }
 
 const pendente = (r: Registro) => r.faltando > 0 && !r.resolvido
+
+/**
+ * Texto para o grupo (decisão 011): só NX e quantos ainda faltam, sem nome nem telefone.
+ * "Ainda faltam" = o que o motorista avisou menos o que a agência já achou.
+ */
+function msgFaltasGrupo(pendentes: Registro[], dia: { atras: number; data: string }) {
+  const linhas = [...pendentes]
+    .sort((a, b) => Number(a.nx) - Number(b.nx))
+    .map((r) => {
+      const n = r.faltando - r.achados
+      return `• NX ${r.nx}: ${n === 1 ? 'falta 1 pacote' : `faltam ${n} pacotes`}`
+    })
+  const h = new Date().getHours()
+  const ola = `Pessoal, ${h < 3 || h >= 18 ? 'boa noite' : h < 12 ? 'bom dia' : 'boa tarde'}!`
+  const quando = dia.atras === 0 ? `de hoje (${dia.data})` : `do dia ${dia.data}`
+  return `${ola} Estamos com pacote faltando nas sacas ${quando}:\n\n${linhas.join('\n')}\n\n`
+    + 'Quem achar pacote que não é da sua saca, por favor, nos avise. Obrigado pela sua ajuda!'
+}
 
 /** Botão de um dia: "Qui" em cima, "12/11" embaixo (na busca, a contagem). Hoje é o cartão maior, separado. */
 function BotaoDia({ dia, escolhido, buscando, onEscolher }: {
@@ -212,8 +231,9 @@ export function Lista({ adm, onSair }: { adm: string; onSair: () => void }) {
       (f: Error) => { if (ativo) setErro(f.message) },
     )
     carregar()
+    marcarPresenca() // quem abre a lista vira a responsável do dia (decisão 013)
     const parar = aoMudar(carregar)
-    const aoVoltar = () => { if (!document.hidden) carregar() }
+    const aoVoltar = () => { if (!document.hidden) { carregar(); marcarPresenca() } }
     document.addEventListener('visibilitychange', aoVoltar)
     return () => { ativo = false; parar(); document.removeEventListener('visibilitychange', aoVoltar) }
   }, [versao])
@@ -230,17 +250,19 @@ export function Lista({ adm, onSair }: { adm: string; onSair: () => void }) {
   const bruto = busca.trim()
   const q = bruto.toLowerCase().replace(/^nx\s*/, '')
   const todos = registros ?? []
-  const totalPendentes = todos.filter(pendente).length
-  const filtrandoFaltas = soFaltas && totalPendentes > 0
-  const achados = todos.filter(
-    (r) => (!q || r.nome.toLowerCase().includes(q) || r.saca.includes(q) || r.nx.includes(q)) && (!filtrandoFaltas || pendente(r)),
-  )
+  const achados = todos.filter((r) => !q || r.nome.toLowerCase().includes(q) || r.saca.includes(q) || r.nx.includes(q))
   const dias = diasDaLista().map((d) => ({
     ...d, linhas: achados.filter(d.contem), pendentes: todos.filter((r) => d.contem(r) && pendente(r)).length,
   }))
   const dia = dias[diaSel]
   const totalAchados = achados.length
-  const buscando = !!q || filtrandoFaltas
+  const buscando = !!q
+  // Faltas, mensagem do grupo e planilha são sempre do dia escolhido (o número importa para aquele dia).
+  const doDia = todos.filter(dia.contem)
+  const filtrandoFaltas = soFaltas && dia.pendentes > 0
+  const linhas = filtrandoFaltas ? dia.linhas.filter(pendente) : dia.linhas
+  const msgGrupo = msgFaltasGrupo(doDia.filter(pendente), dia)
+  const escolherDia = (atras: number) => { setDiaSel(atras); setSoFaltas(false) }
 
   return (
     <section className="screen">
@@ -253,25 +275,41 @@ export function Lista({ adm, onSair }: { adm: string; onSair: () => void }) {
           autoComplete="off" value={busca} onChange={(e) => setBusca(e.target.value)}
         />
       </div>
-      {totalPendentes > 0 && (
-        <button type="button" className="alerta" aria-pressed={filtrandoFaltas} onClick={() => setSoFaltas((v) => !v)}>
-          {filtrandoFaltas
-            ? 'Mostrar todas as sacas'
-            : totalPendentes === 1 ? '⚠ Falta pacote em 1 saca' : `⚠ Falta pacote em ${totalPendentes} sacas`}
-        </button>
-      )}
       <div className="dias" role="group" aria-label="Escolher o dia">
-        <BotaoDia dia={dias[0]} escolhido={diaSel === 0} buscando={buscando} onEscolher={() => setDiaSel(0)} />
+        <BotaoDia dia={dias[0]} escolhido={diaSel === 0} buscando={buscando} onEscolher={() => escolherDia(0)} />
         <div className="antes">
           {dias.slice(1).map((d) => (
-            <BotaoDia key={d.atras} dia={d} escolhido={diaSel === d.atras} buscando={buscando} onEscolher={() => setDiaSel(d.atras)} />
+            <BotaoDia key={d.atras} dia={d} escolhido={diaSel === d.atras} buscando={buscando} onEscolher={() => escolherDia(d.atras)} />
           ))}
         </div>
       </div>
+      {dia.pendentes > 0 && (
+        <>
+          <button type="button" className="alerta" aria-pressed={filtrandoFaltas} onClick={() => setSoFaltas((v) => !v)}>
+            {filtrandoFaltas
+              ? 'Mostrar todas as sacas'
+              : dia.pendentes === 1 ? '⚠ Falta pacote em 1 saca' : `⚠ Falta pacote em ${dia.pendentes} sacas`}
+          </button>
+          <a
+            className="btn zap menor" href={linkWaMe(null, msgGrupo)} target="_blank" rel="noopener"
+            onClick={(e) => abrirWhatsApp(e, null, msgGrupo)}
+          >
+            <IconeWhatsApp />Mandar faltantes no grupo
+          </a>
+        </>
+      )}
+      {doDia.length > 0 && (
+        <button
+          type="button" className="btn ghost menor"
+          onClick={() => compartilharPlanilha(doDia, dia.inicio).catch(() => setErro('Não deu para gerar a planilha. Tente de novo.'))}
+        >
+          Planilha do dia
+        </button>
+      )}
       <div className="count">
         <span aria-live="polite">
-          <b>{dia.linhas.length}</b>{' '}
-          {filtrandoFaltas ? 'com falta' : q ? (dia.linhas.length === 1 ? 'encontrado' : 'encontrados') : dia.linhas.length === 1 ? 'registro' : 'registros'}
+          <b>{linhas.length}</b>{' '}
+          {filtrandoFaltas ? 'com falta' : q ? (linhas.length === 1 ? 'encontrado' : 'encontrados') : linhas.length === 1 ? 'registro' : 'registros'}
         </span>
         <span className="who">
           <span>{adm}</span>
@@ -287,15 +325,13 @@ export function Lista({ adm, onSair }: { adm: string; onSair: () => void }) {
           <div role="columnheader"><span className="sr">WhatsApp</span></div>
         </div>
         <div aria-live="polite">
-          {registros === null ? null : dia.linhas.length > 0 ? (
-            dia.linhas.map((r) => (
+          {registros === null ? null : linhas.length > 0 ? (
+            linhas.map((r) => (
               <Linha key={r.id} r={r} adm={adm} busca={q} nova={r.criadoEm > abertaEm.current} data={diaSel > 0 ? dia.data : undefined} onResolver={resolver} onMudou={() => setVersao((v) => v + 1)} onErro={setErro} />
             ))
           ) : (
             <div className="empty">
-              {filtrandoFaltas && !q ? (
-                <p>Nenhuma falta pendente nesse dia. A bolinha vermelha mostra o dia que tem.</p>
-              ) : !q ? (
+              {!q ? (
                 <p>{diaSel === 0 ? 'Ninguém registrou saca hoje ainda.' : 'Ninguém registrou saca nesse dia.'}</p>
               ) : totalAchados > 0 ? (
                 <p>Nada com “{bruto}” nesse dia. Os números nos dias acima mostram onde tem.</p>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { IconeWhatsApp } from '../components/Flor'
 import { lerMinhas } from '../lib/local'
-import { avisarFalta, listarMinhas, type Registro } from '../lib/registro'
+import { avisarFalta, listarMinhas, responsavelDoDia, type Registro } from '../lib/registro'
 import { abrirWhatsApp, linkWaMe } from '../lib/whatsapp'
 
 const hora = (r: Registro) => new Date(r.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
@@ -29,20 +29,22 @@ function useMinhas(versao: number) {
 
 /**
  * O aviso de falta de UMA saca (decisão 011): botão → quantidade no teclado numérico → Avisar
- * → "Avisado!" + mandar no grupo. `cheio`: botão largo (tela Registrado); senão, compacto (lista).
+ * → "Avisado!" + mandar para o responsável (no grupo só as adms escrevem). `cheio`: botão largo (tela Registrado); senão, compacto (lista).
  */
 function AvisoFalta({ r, nome, cheio, onMudou, onGrupo }: {
   r: Registro
   nome: string
   cheio?: boolean
   onMudou: (faltando: number) => void
-  /** Avisa a tela quando o "Mandar no grupo" está à mostra (para não ter 2 botões de grupo). */
+  /** Avisa a tela quando o "Mandar para responsável" está à mostra (para não ter 2 botões de WhatsApp). */
   onGrupo?: (id: string, mostrando: boolean) => void
 }) {
   const [aberto, setAberto] = useState(false)
   const [qtd, setQtd] = useState('')
   const [erro, setErro] = useState('')
   const [avisado, setAvisado] = useState<number | null>(null)
+  // WhatsApp da responsável do dia (decisão 013). null = o motorista escolhe a conversa.
+  const [telResp, setTelResp] = useState<string | null>(null)
   const refQtd = useRef<HTMLInputElement>(null)
   const corrigindo = r.faltando > 0
   const mostrandoGrupo = aberto && avisado !== null && avisado > 0
@@ -74,6 +76,8 @@ function AvisoFalta({ r, nome, cheio, onMudou, onGrupo }: {
       setErro((falha as Error).message)
       return
     }
+    // Busca antes de mostrar o botão: o link do WhatsApp precisa estar pronto na hora do toque.
+    if (n > 0) setTelResp(await responsavelDoDia())
     onMudou(n)
     setAvisado(n)
   }
@@ -103,8 +107,8 @@ function AvisoFalta({ r, nome, cheio, onMudou, onGrupo }: {
         {avisado > 0 ? (
           <>
             <p><b>Avisado!</b> A agência já vê no app.</p>
-            <a className="btn zap" href={linkWaMe(null, msg)} target="_blank" rel="noopener" onClick={(e) => abrirWhatsApp(e, null, msg)}>
-              <IconeWhatsApp />Mandar no grupo
+            <a className="btn zap" href={linkWaMe(telResp, msg)} target="_blank" rel="noopener" onClick={(e) => abrirWhatsApp(e, telResp, msg)}>
+              <IconeWhatsApp />Mandar para responsável
             </a>
           </>
         ) : (

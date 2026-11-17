@@ -104,3 +104,21 @@ export function aoMudar(callback: () => void): () => void {
     .subscribe()
   return () => { supabase.removeChannel(canal) }
 }
+
+/** Adm abriu (ou voltou para) a lista: vira a responsável do dia (decisão 013). Falhar não atrapalha a tela. */
+export function marcarPresenca() {
+  supabase.rpc('marcar_presenca').then(() => {}, () => {})
+}
+
+/**
+ * Motorista: WhatsApp da responsável de hoje = última adm que abriu a lista (decisão 013).
+ * null = ninguém abriu hoje ou sem internet; aí o WhatsApp abre sem destinatário.
+ */
+export async function responsavelDoDia(): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.rpc('responsavel_do_dia')
+    return error || typeof data !== 'string' || !data ? null : data
+  } catch {
+    return null
+  }
+}

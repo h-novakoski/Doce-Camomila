@@ -8,6 +8,8 @@
 | `docs/decisoes/002-seguranca-rls.md` | criar tabela, policy, RPC ou qualquer acesso ao banco |
 | `docs/decisoes/010-historico-3-dias.md` | pensar em histórico, dias da lista ou retenção (substitui a 003) |
 | `docs/decisoes/011-pacote-faltando.md` | mexer no aviso de pacote faltando (motorista e agência) |
+| `docs/decisoes/012-registro-do-dia.md` | mexer na planilha do dia ou pensar em relatório/exportação |
+| `docs/decisoes/013-responsavel-do-dia.md` | mexer em para quem o motorista manda o aviso de falta ou no WhatsApp das adms |
 | `docs/decisoes/004-dois-links.md` | mexer em rotas, QR code ou na separação motorista/agência |
 | `docs/decisoes/005-identidade-miolo.md` | mexer em cor, fonte, logo ou componente visual |
 | `docs/decisoes/008-stack-cloudflare.md` | instalar dependência, configurar build ou deploy (substitui a 006) |

@@ -9,7 +9,7 @@ Substitui a folha de papel da bancada da agência Doce Camomila: o motorista reg
 
 ## Configuração
 - `.env.local` (fora do git) com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`; modelo em `.env.example`. Na Cloudflare, as mesmas variáveis no painel.
-- Banco: migrações em `supabase/migrations/` (aplicadas pelo MCP do Supabase). Contas das adms NÃO ficam em migração (têm senha): são criadas direto no Auth + tabela `admins`.
+- Banco: migrações em `supabase/migrations/` (aplicadas pelo MCP do Supabase). Contas das adms NÃO ficam em migração (têm senha): são criadas direto no Auth + tabela `admins`. O WhatsApp de cada adm (`admins.tel`, DDD + número sem 55) também é preenchido direto na tabela; sem ele a adm nunca é responsável do dia.
 - Nada de dado de pessoa, senha ou lista de adms no código: quem é adm vem da tabela `admins`.
 
 ## Comandos
@@ -23,22 +23,23 @@ Substitui a folha de papel da bancada da agência Doce Camomila: o motorista reg
 ## Onde está o quê no código
 - `src/App.tsx`: escolhe a tela pelo caminho: `/agencia` → agência; qualquer outro → motorista
 - `src/motorista/`: rota `/`, com `Cadastro` → `Registrar` → `Registrado`. `MinhasSacas` (embaixo do Registrar) = aviso de pacote faltando (decisão 011)
-- `src/agencia/`: rota `/agencia`, com `Login` → (1º acesso: `CriarSenha`) → `Lista` (seletor de dias, busca nos 3 dias com contagem por dia, destaque, WhatsApp, faltas). O dia vira às 3h: use `inicioDoDia()` de `src/lib/registro.ts`, nunca `new Date()` puro
+- `src/agencia/`: rota `/agencia`, com `Login` → (1º acesso: `CriarSenha`) → `Lista` (seletor de dias, busca nos 3 dias com contagem por dia, destaque, WhatsApp, faltas do dia escolhido, "Mandar faltantes no grupo", "Planilha do dia"). O dia vira às 3h: use `inicioDoDia()` de `src/lib/registro.ts`, nunca `new Date()` puro
 - `src/lib/supabase.ts`: o cliente e `mensagemDeErro` (sem internet / mensagens P0001 escritas nas funções do banco)
-- `src/lib/registro.ts`: dados. Motorista só chama as funções `registrar`, `minhas_sacas`, `avisar_falta` (sem login); adm lê a tabela `registros` e chama `registrar_achados`, `marcar_resolvido`; `aoMudar` = tempo real (só funciona para adm). O motorista recarrega as sacas dele a cada 1 min e ao voltar para o app.
+- `src/lib/registro.ts`: dados. Motorista só chama as funções `registrar`, `minhas_sacas`, `avisar_falta` (sem login); adm lê a tabela `registros` e chama `registrar_achados`, `marcar_resolvido`, `marcar_presenca` (quem abre a lista vira a responsável do dia, decisão 013; o motorista pega o número com `responsavel_do_dia`); `aoMudar` = tempo real (só funciona para adm). O motorista recarrega as sacas dele a cada 1 min e ao voltar para o app.
 - `src/lib/sessao.ts`: login das adms (usuário → `<usuario>@docecamomila.local` no Auth), `criarSenha` + função `marcar_senha_trocada`
 - `src/lib/whatsapp.ts`: no celular tenta `whatsapp://` e cai no `wa.me` se o app não abrir. `tel` null = sem destinatário (a pessoa escolhe a conversa, ex.: o grupo)
+- `src/lib/planilha.ts`: "Planilha do dia" da agência (decisão 012): monta o .xlsx no navegador com `write-excel-file` (import dinâmico), sem telefone; celular compartilha, computador baixa
 - `src/lib/local.ts`: o que o motorista guarda no navegador (nome, telefone, dica do atalho, **chaves secretas** das sacas dele, por 3 dias)
-- `src/lib/config.ts`: link do grupo do WhatsApp da agência
+- `src/lib/config.ts`: link do grupo do WhatsApp da agência (só as adms escrevem nele)
 - `src/styles.css`: CSS copiado do protótipo. Mudou o visual? Mude nos dois.
 - `public/`: ícones do app. Os PNG (192, 512, maskable 512, apple-touch 180) são obrigatórios para instalar no Android/iPhone; só SVG faz a instalação falhar sem aviso.
 - `src/App.tsx`: o app instalado sempre abre em `/`; se a última tela usada naquele celular foi a agência, vai direto para `/agencia` (chave `camomila-tela`).
-- **O protótipo ainda não tem o aviso de pacote faltando (decisão 011).** Para essa parte, a referência é o app.
+- **O protótipo ainda não tem o aviso de pacote faltando (decisão 011) nem a planilha do dia (012).** Para essa parte, a referência é o app.
 
 ## Testar
 - `npm run dev` usa o banco de verdade (não há mais dados de exemplo). Registros de teste aparecem para as adms até a limpeza (3 dias): use um nome claro como "Teste" e apague depois.
 - Não testar o login com as contas das adms reais: o 1º acesso troca a senha delas. Usar a conta de teste `higor` (senha_trocada = true).
-- Criar conta ou apagar dados pelo MCP do Supabase não funciona nesta janela do VS Code (o conector pede confirmação e ela é negada sozinha). Só leitura e migrações passam; o resto vai pelo SQL Editor do painel.
+- Criar conta ou apagar dados pelo MCP do Supabase não funciona nesta janela do VS Code (o conector pede confirmação e ela é negada sozinha). Só leitura e migrações passam; o resto vai pelo SQL Editor do painel. (Em 2026-11-16 um `update` em `admins` passou; vale tentar. Antes, confira com `list_projects` se o conector está na organização da agência.)
 - No Bash deste ambiente, `\\` vira `\` (até em heredoc com 'EOF'). Ao gerar código com barra invertida por script, use `String.fromCharCode(92)` ou edite com a ferramenta Edit.
 
 ## Como se orientar

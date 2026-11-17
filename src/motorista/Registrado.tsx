@@ -16,7 +16,7 @@ export function Registrado({ nome, registro, versao, mostrarDica, onFecharDica, 
   const refTitulo = useRef<HTMLHeadingElement>(null)
   useEffect(() => { refTitulo.current?.focus() }, [])
 
-  // Enquanto algum aviso de falta mostra "Mandar no grupo", some o "Abrir grupo" de baixo (1 botão de grupo só).
+  // Enquanto algum aviso de falta mostra "Mandar para responsável", some o "Abrir grupo" de baixo (1 botão de WhatsApp só).
   const [comAviso, setComAviso] = useState<string[]>([])
   const onGrupo = useCallback((id: string, mostrando: boolean) => {
     setComAviso((l) => (mostrando ? (l.includes(id) ? l : [...l, id]) : l.filter((x) => x !== id)))

@@ -54,6 +54,7 @@ label{display:flex;flex-direction:column;gap:6px;font-size:16px;font-weight:700}
 .btn.zap{background:var(--zap);color:var(--on-zap)}
 .btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--edge)}
 .btn svg{width:24px;height:24px;flex:none}
+.btn.menor{min-height:52px;font-size:18px}
 
 .confirm{border:2px solid var(--ink);background:var(--soft);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
 .confirm .num{font-family:var(--f-code);font-weight:600;font-size:28px;font-variant-numeric:tabular-nums}
